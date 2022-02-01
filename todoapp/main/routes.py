@@ -3,9 +3,8 @@ from bson.objectid import ObjectId
 
 from todoapp.extensions import mongo
 
-main = Blueprint('main', __name__)
+main  = Blueprint('main', __name__)
 
-# todos = mongo.db.todos
 
 @main.route('/')
 def index():
@@ -17,14 +16,25 @@ def index():
 def add_todo():
     todos_collection = mongo.db.todos
     todo_item = request.form.get('add-todo')
-    todos_collection.insert_one({'todo': todo_item, 'completed': False})
+    todos_collection.insert_one({'text': todo_item, 'complete': False})
     return redirect(url_for('main.index'))
 
-@main.route('/complete/<oid>')
+@main.route('/complete_todo/<oid>')
 def complete_todo(oid):
     todos_collection = mongo.db.todos
-    todo_item = todos_collection.replace_one({'_id': ObjectId(oid)})
-    todo_item['completed'] = True
+    todo_item = todos_collection.find_one({'_id' : ObjectId(oid)})
+    todo_item['complete'] = True
     todos_collection.save(todo_item)
     return redirect(url_for('main.index'))
 
+@main.route('/delete_completed')
+def delete_completed():
+    todos_collection = mongo.db.todos
+    todos_collection.delete_many({'complete' : True})
+    return redirect(url_for('main.index'))
+
+@main.route('/delete_all')
+def delete_all():
+    todos_collection = mongo.db.todos
+    todos_collection.delete_many({})
+    return redirect(url_for('main.index'))
